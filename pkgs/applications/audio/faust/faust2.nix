@@ -3,6 +3,7 @@
 , fetchFromGitHub
 , makeWrapper
 , pkgconfig
+, cmake
 , clang
 , llvm
 , emscripten
@@ -16,13 +17,13 @@ with stdenv.lib.strings;
 
 let
 
-  version = "2.5.23";
+  version = "2.5.35-dev";
 
   src = fetchFromGitHub {
     owner = "grame-cncm";
     repo = "faust";
-    rev = "${version}";
-    sha256 = "1pci8ac6sqrm3mb3yikmmr3iy35g3nj4iihazif1amqkbdz719rc";
+    rev = "98bc625f72a4b3152756dda2feb6ac8f6327f78d";
+    sha256 = "1va7zs0fd721m7ljhfia5vkf492ac66sfjlik184w9gzksl1gnmc";
     fetchSubmodules = true;
   };
 
@@ -40,7 +41,7 @@ let
 
     inherit src;
 
-    nativeBuildInputs = [ makeWrapper pkgconfig vim ];
+    nativeBuildInputs = [ cmake makeWrapper pkgconfig vim ];
     buildInputs = [ llvm emscripten openssl libsndfile libmicrohttpd ];
 
 
@@ -48,30 +49,11 @@ let
       inherit wrap wrapWithBuildEnv;
     };
 
-
     preConfigure = ''
-      makeFlags="$makeFlags prefix=$out LLVM_CONFIG='${llvm}/bin/llvm-config' world"
-
-      # The faust makefiles use 'system ?= $(shell uname -s)' but nix
-      # defines 'system' env var, so undefine that so faust detects the
-      # correct system.
       unset system
-      # sed -e "232s/LLVM_STATIC_LIBS/LLVMLIBS/" -i compiler/Makefile.unix
-
-      # The makefile sets LLVM_<version> depending on the current llvm
-      # version, but the detection code is quite brittle.
-      #
-      # Failing to properly detect the llvm version means that the macro
-      # LLVM_VERSION ends up being the raw output of `llvm-config --version`, while
-      # the code assumes that it's set to a symbol like `LLVM_35`.  Two problems result:
-      # * <command-line>:0:1: error: macro names must be identifiers.; and
-      # * a bunch of undefined reference errors due to conditional definitions relying on
-      #   LLVM_XY being defined.
-      #
-      # For now, fix this by 1) pinning the llvm version; 2) manually setting LLVM_VERSION
-      # to something the makefile will recognize.
-      sed '52iLLVM_VERSION=${stdenv.lib.getVersion llvm}' -i compiler/Makefile.unix
+      cd build
     '';
+
 
     # Remove most faust2appl scripts since they won't run properly
     # without additional paths setup. See faust.wrap,
