@@ -1,4 +1,5 @@
-{ stdenv, fetchFromGitHub, autoreconfHook, pkgconfig, file, python3
+{ stdenv, fetchFromGitHub, autoreconfHook, pkgconfig, file, python3, gettext
+, gtk-doc, libxslt, docbook_xsl
 , mpfr, pcre }:
 
 stdenv.mkDerivation rec {
@@ -12,7 +13,9 @@ stdenv.mkDerivation rec {
     sha256 = "1ys5d8rya8x4q34gn1hr96z7797s9gdzah0y0d7g84x5x6k50p30";
   };
 
-  nativeBuildInputs = [ autoreconfHook file pkgconfig python3 ];
+  outputs = [ "out" "dev" "devdoc" ];
+
+  nativeBuildInputs = [ autoreconfHook file pkgconfig python3 gettext gtk-doc libxslt docbook_xsl ];
   buildInputs = [ mpfr pcre ]; 
 
   # for python bindings
